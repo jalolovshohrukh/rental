@@ -423,7 +423,10 @@ function renderDashboard() {
   const statsCard = document.createElement('div');
   statsCard.className = 'card';
   statsCard.innerHTML = `<h3>${t('dashboard')
-  setTimeout(() => { renderCharts(); }, 0);
+  
+  // Call renderCharts after charts inserted
+  renderCharts();
+
 }</h3>`;
   const statsContent = document.createElement('div');
   statsContent.style.display = 'flex';
