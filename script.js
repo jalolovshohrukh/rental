@@ -422,7 +422,9 @@ function renderDashboard() {
   // Stats card
   const statsCard = document.createElement('div');
   statsCard.className = 'card';
-  statsCard.innerHTML = `<h3>${t('dashboard')}</h3>`;
+  statsCard.innerHTML = `<h3>${t('dashboard')
+  setTimeout(() => { renderCharts(); }, 0);
+}</h3>`;
   const statsContent = document.createElement('div');
   statsContent.style.display = 'flex';
   statsContent.style.gap = '20px';
