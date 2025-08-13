@@ -319,7 +319,19 @@ function t(key) {
 }
 
 // Initialize application
+function setupHamburger(){
+  const btn=document.getElementById('hamburger');
+  const nav=document.getElementById('primary-nav');
+  if(!btn||!nav) return;
+  btn.addEventListener('click',()=>{
+    const open = nav.classList.toggle('open');
+    btn.classList.toggle('active', open);
+    btn.setAttribute('aria-expanded', String(open));
+  });
+}
+
 function init() {
+  setupHamburger();
   // Set initial language labels
   updateNavLabels();
   document.getElementById('languageSelect').value = currentLanguage;
@@ -1987,6 +1999,64 @@ function renderAllCharts() {
   });
 
   window.expChart = new Chart(expCtx, {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+      datasets: [{ label: 'Expenses (TJS)', data: [300, 400, 350, 450, 400], fill: false, borderColor: '#e91e63' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
+
+function formatTJS(n){
+  if (isNaN(n)) return '—';
+  return `${Number(n).toFixed(2)} TJS`;
+}
+
+let unitChartInstance, occupancyChartInstance, cashflowChartInstance, expensesChartInstance;
+
+function renderCharts() {
+  const unitCtx = document.getElementById('unitChart')?.getContext('2d');
+  const occCtx = document.getElementById('occupancyChart')?.getContext('2d');
+  const cashCtx = document.getElementById('cashflowChart')?.getContext('2d');
+  const expCtx = document.getElementById('expensesChart')?.getContext('2d');
+
+  if (unitChartInstance) unitChartInstance.destroy();
+  if (occupancyChartInstance) occupancyChartInstance.destroy();
+  if (cashflowChartInstance) cashflowChartInstance.destroy();
+  if (expensesChartInstance) expensesChartInstance.destroy();
+
+  unitChartInstance = new Chart(unitCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Unit A', 'Unit B', 'Unit C'],
+      datasets: [
+        { label: 'Paid (TJS)', data: [1200, 1500, 1800], backgroundColor: '#4caf50' },
+        { label: 'Unpaid (TJS)', data: [300, 0, 200], backgroundColor: '#f44336' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  occupancyChartInstance = new Chart(occCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Empty', 'Occupied'],
+      datasets: [{ data: [2, 5], backgroundColor: ['#ff9800', '#2196f3'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  cashflowChartInstance = new Chart(cashCtx, {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+      datasets: [{ label: 'Cashflow (TJS)', data: [1000, 1200, 1100, 1300, 1250], fill: false, borderColor: '#3f51b5' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  expensesChartInstance = new Chart(expCtx, {
     type: 'line',
     data: {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
