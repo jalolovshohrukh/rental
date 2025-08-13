@@ -1932,3 +1932,66 @@ function renderExpensesChart(data) {
 function formatCurrency(value) {
     return value.toLocaleString('en-US', { style: 'currency', currency: 'TJS' });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  const now = new Date();
+  const past = new Date();
+  past.setMonth(past.getMonth() - 12);
+  document.getElementById('dateFrom').value = past.toISOString().slice(0, 7);
+  document.getElementById('dateTo').value = now.toISOString().slice(0, 7);
+
+  renderAllCharts();
+
+  document.getElementById('updateCharts').addEventListener('click', renderAllCharts);
+});
+
+function renderAllCharts() {
+  const unitCtx = document.getElementById('unitPerformanceChart').getContext('2d');
+  const occCtx = document.getElementById('occupancyChart').getContext('2d');
+  const cashCtx = document.getElementById('cashflowChart').getContext('2d');
+  const expCtx = document.getElementById('expensesChart').getContext('2d');
+
+  if (window.unitChart) window.unitChart.destroy();
+  if (window.occChart) window.occChart.destroy();
+  if (window.cashChart) window.cashChart.destroy();
+  if (window.expChart) window.expChart.destroy();
+
+  window.unitChart = new Chart(unitCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Unit A', 'Unit B', 'Unit C'],
+      datasets: [
+        { label: 'Paid (TJS)', data: [1200, 1500, 1800], backgroundColor: '#4caf50' },
+        { label: 'Unpaid (TJS)', data: [300, 0, 200], backgroundColor: '#f44336' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  window.occChart = new Chart(occCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Empty', 'Occupied'],
+      datasets: [{ data: [2, 5], backgroundColor: ['#ff9800', '#2196f3'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  window.cashChart = new Chart(cashCtx, {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+      datasets: [{ label: 'Cashflow (TJS)', data: [1000, 1200, 1100, 1300, 1250], fill: false, borderColor: '#3f51b5' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  window.expChart = new Chart(expCtx, {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+      datasets: [{ label: 'Expenses (TJS)', data: [300, 400, 350, 450, 400], fill: false, borderColor: '#e91e63' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}

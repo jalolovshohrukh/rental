@@ -34,7 +34,29 @@
       </div>
     </div>
   </header>
-  <main id="content"></main>
+  
+  <main id="content">
+    <section id="dashboard">
+      <div class="chart-controls">
+        <label>From: <input type="month" id="dateFrom"></label>
+        <label>To: <input type="month" id="dateTo"></label>
+        <button id="updateCharts">Update Charts</button>
+      </div>
+
+      <h3>Unit Performance</h3>
+      <div class="chart-container"><canvas id="unitPerformanceChart"></canvas></div>
+
+      <h3>Occupancy</h3>
+      <div class="chart-container"><canvas id="occupancyChart"></canvas></div>
+
+      <h3>Cashflow Summary</h3>
+      <div class="chart-container"><canvas id="cashflowChart"></canvas></div>
+
+      <h3>Expenses</h3>
+      <div class="chart-container"><canvas id="expensesChart"></canvas></div>
+    </section>
+  </main>
+
 
   <!-- Modal for forms -->
   <div id="modal" class="modal hidden">
