@@ -1843,3 +1843,92 @@ function clearSearchResults() {
 
 // Initialize after DOM is ready
 window.addEventListener('DOMContentLoaded', init);
+
+// Unit Performance Chart
+let unitPerformanceChart;
+function renderUnitPerformanceChart(data) {
+    const ctx = document.getElementById('unitPerformanceChart').getContext('2d');
+    if (unitPerformanceChart) {
+        unitPerformanceChart.destroy();
+    }
+    unitPerformanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+
+// Occupancy Chart
+let occupancyChart;
+function renderOccupancyChart(emptyCount, occupiedCount) {
+    const ctx = document.getElementById('occupancyChart').getContext('2d');
+    if (occupancyChart) {
+        occupancyChart.destroy();
+    }
+    occupancyChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Empty', 'Occupied'],
+            datasets: [{
+                data: [emptyCount, occupiedCount],
+                backgroundColor: ['#FF6384', '#36A2EB']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+
+// Shared date range
+let startDate = new Date();
+startDate.setMonth(startDate.getMonth() - 12);
+let endDate = new Date();
+
+function renderCashflowChart(data) {
+    const ctx = document.getElementById('cashflowChart').getContext('2d');
+    if (window.cashflowChartInstance) {
+        window.cashflowChartInstance.destroy();
+    }
+    window.cashflowChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: { enabled: true }
+            }
+        }
+    });
+}
+
+function renderExpensesChart(data) {
+    const ctx = document.getElementById('expensesChart').getContext('2d');
+    if (window.expensesChartInstance) {
+        window.expensesChartInstance.destroy();
+    }
+    window.expensesChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: { enabled: true }
+            }
+        }
+    });
+}
+
+function formatCurrency(value) {
+    return value.toLocaleString('en-US', { style: 'currency', currency: 'TJS' });
+}
