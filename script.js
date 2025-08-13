@@ -107,6 +107,16 @@ const translations = {
     manager: 'Manager',
     accountant: 'Accountant',
     viewer: 'Viewer'
+    ,
+    // Date range and chart labels
+    from: 'From',
+    to: 'To',
+    update_charts: 'Update Charts',
+    cashflow: 'Cashflow',
+    expenses_line: 'Expenses',
+    occupancy: 'Occupancy',
+    empty_units: 'Empty',
+    filled_units: 'Occupied'
   },
   ru: {
     dashboard: 'Панель',
@@ -199,6 +209,16 @@ const translations = {
     manager: 'Менеджер',
     accountant: 'Бухгалтер',
     viewer: 'Наблюдатель'
+    ,
+    // Date range and chart labels
+    from: 'От',
+    to: 'До',
+    update_charts: 'Обновить графики',
+    cashflow: 'Денежный поток',
+    expenses_line: 'Расходы',
+    occupancy: 'Заполняемость',
+    empty_units: 'Свободно',
+    filled_units: 'Занято'
   },
   tj: {
     dashboard: 'Асосӣ',
@@ -291,6 +311,16 @@ const translations = {
     manager: 'Мудир',
     accountant: 'Муҳосиб',
     viewer: 'Нозир'
+    ,
+    // Date range and chart labels
+    from: 'Аз',
+    to: 'То',
+    update_charts: 'Навсозии диаграммаҳо',
+    cashflow: 'Ҷараёни нақд',
+    expenses_line: 'Хароҷот',
+    occupancy: 'Ишғол',
+    empty_units: 'Холӣ',
+    filled_units: 'Ишғолшуда'
   }
 };
 
@@ -319,19 +349,7 @@ function t(key) {
 }
 
 // Initialize application
-function setupHamburger(){
-  const btn=document.getElementById('hamburger');
-  const nav=document.getElementById('primary-nav');
-  if(!btn||!nav) return;
-  btn.addEventListener('click',()=>{
-    const open = nav.classList.toggle('open');
-    btn.classList.toggle('active', open);
-    btn.setAttribute('aria-expanded', String(open));
-  });
-}
-
 function init() {
-  setupHamburger();
   // Set initial language labels
   updateNavLabels();
   document.getElementById('languageSelect').value = currentLanguage;
@@ -344,6 +362,9 @@ function init() {
       renderPage(page);
     });
   });
+
+  // Set up hamburger menu for mobile navigation
+  setupHamburger();
 
   // Language selector
   document.getElementById('languageSelect').addEventListener('change', (e) => {
@@ -422,12 +443,7 @@ function renderDashboard() {
   // Stats card
   const statsCard = document.createElement('div');
   statsCard.className = 'card';
-  statsCard.innerHTML = `<h3>${t('dashboard')
-  
-  // Call renderCharts after charts inserted
-  renderCharts();
-
-}</h3>`;
+  statsCard.innerHTML = `<h3>${t('dashboard')}</h3>`;
   const statsContent = document.createElement('div');
   statsContent.style.display = 'flex';
   statsContent.style.gap = '20px';
@@ -449,39 +465,80 @@ function renderDashboard() {
   mapCard.appendChild(mapDiv);
   container.appendChild(mapCard);
 
-  // Cash flow summary card
-  const cashFlowData = computeCashFlow();
-  const cashCard = document.createElement('div');
-  cashCard.className = 'card';
-  cashCard.innerHTML = `<h3>${t('cash_flow_chart')}</h3>`;
-  const cashTable = document.createElement('table');
-  const cashHeader = document.createElement('tr');
-  cashHeader.innerHTML = `<th>${t('date')}</th><th>${t('amount')}</th>`;
-  cashTable.appendChild(cashHeader);
-  cashFlowData.forEach(item => {
-    const row = document.createElement('tr');
-    row.innerHTML = `<td>${item.month}</td><td>${item.amount.toFixed(2)}</td>`;
-    cashTable.appendChild(row);
-  });
-  cashCard.appendChild(cashTable);
-  container.appendChild(cashCard);
-
-  // Expenses summary card
-  const expenseSummary = computeExpenseSummary();
-  const expCard = document.createElement('div');
-  expCard.className = 'card';
-  expCard.innerHTML = `<h3>${t('expenses_chart')}</h3>`;
-  const expTable = document.createElement('table');
-  const expHeader = document.createElement('tr');
-  expHeader.innerHTML = `<th>${t('date')}</th><th>${t('amount')}</th>`;
-  expTable.appendChild(expHeader);
-  expenseSummary.forEach(item => {
-    const row = document.createElement('tr');
-    row.innerHTML = `<td>${item.month}</td><td>${item.amount.toFixed(2)}</td>`;
-    expTable.appendChild(row);
-  });
-  expCard.appendChild(expTable);
-  container.appendChild(expCard);
+  // Charts card with date range controls
+  const chartsCard = document.createElement('div');
+  chartsCard.className = 'card';
+  // Date range controls (month inputs)
+  const controlsDiv = document.createElement('div');
+  controlsDiv.className = 'date-range';
+  const fromLabel = document.createElement('label');
+  fromLabel.textContent = t('from') + ' ';
+  const fromInput = document.createElement('input');
+  fromInput.type = 'month';
+  fromInput.id = 'fromDate';
+  const toLabel = document.createElement('label');
+  toLabel.textContent = t('to') + ' ';
+  const toInput = document.createElement('input');
+  toInput.type = 'month';
+  toInput.id = 'toDate';
+  const updateBtn = document.createElement('button');
+  updateBtn.id = 'updateCharts';
+  updateBtn.textContent = t('update_charts');
+  fromLabel.appendChild(fromInput);
+  toLabel.appendChild(toInput);
+  controlsDiv.appendChild(fromLabel);
+  controlsDiv.appendChild(toLabel);
+  controlsDiv.appendChild(updateBtn);
+  chartsCard.appendChild(controlsDiv);
+  // Chart wrappers
+  const chartsContainer = document.createElement('div');
+  chartsContainer.className = 'chart-section';
+  // Unit performance chart
+  const unitWrapper = document.createElement('div');
+  unitWrapper.className = 'chart-wrapper';
+  const unitTitle = document.createElement('h3');
+  unitTitle.textContent = t('unit_performance');
+  const unitCanvas = document.createElement('canvas');
+  unitCanvas.id = 'unitChart';
+  unitCanvas.height = 300;
+  unitWrapper.appendChild(unitTitle);
+  unitWrapper.appendChild(unitCanvas);
+  chartsContainer.appendChild(unitWrapper);
+  // Occupancy chart
+  const occWrapper = document.createElement('div');
+  occWrapper.className = 'chart-wrapper';
+  const occTitle = document.createElement('h3');
+  occTitle.textContent = t('occupancy');
+  const occCanvas = document.createElement('canvas');
+  occCanvas.id = 'occupancyChart';
+  occCanvas.height = 300;
+  occWrapper.appendChild(occTitle);
+  occWrapper.appendChild(occCanvas);
+  chartsContainer.appendChild(occWrapper);
+  // Cashflow chart
+  const cashWrapper = document.createElement('div');
+  cashWrapper.className = 'chart-wrapper';
+  const cashTitle = document.createElement('h3');
+  cashTitle.textContent = t('cashflow');
+  const cashCanvas = document.createElement('canvas');
+  cashCanvas.id = 'cashflowChart';
+  cashCanvas.height = 300;
+  cashWrapper.appendChild(cashTitle);
+  cashWrapper.appendChild(cashCanvas);
+  chartsContainer.appendChild(cashWrapper);
+  // Expenses chart
+  const expWrapper2 = document.createElement('div');
+  expWrapper2.className = 'chart-wrapper';
+  const expTitle = document.createElement('h3');
+  expTitle.textContent = t('expenses_line');
+  const expCanvas2 = document.createElement('canvas');
+  expCanvas2.id = 'expensesChart';
+  expCanvas2.height = 300;
+  expWrapper2.appendChild(expTitle);
+  expWrapper2.appendChild(expCanvas2);
+  chartsContainer.appendChild(expWrapper2);
+  chartsCard.appendChild(chartsContainer);
+  container.appendChild(chartsCard);
 
   // Unpaid properties card
   // Due payments card (overdue or upcoming)
@@ -522,31 +579,31 @@ function renderDashboard() {
   }
   container.appendChild(unpaidCard);
 
-  // Unit performance card
-  const perfCard = document.createElement('div');
-  perfCard.className = 'card';
-  perfCard.innerHTML = `<h3>${t('unit_performance')}</h3>`;
-  const perfCanvas = document.createElement('canvas');
-  perfCanvas.id = 'unitChart';
-  perfCanvas.height = 250;
-  perfCard.appendChild(perfCanvas);
-  container.appendChild(perfCard);
-
-  // Expenses by category card
-  const catCard = document.createElement('div');
-  catCard.className = 'card';
-  catCard.innerHTML = `<h3>${t('expenses_category_summary')}</h3>`;
-  const catCanvas = document.createElement('canvas');
-  catCanvas.id = 'expenseCategoryChart';
-  catCanvas.height = 250;
-  catCard.appendChild(catCanvas);
-  container.appendChild(catCard);
-
-  // After DOM update, render charts and map
+  // After DOM update, set default date range and render charts and map
   setTimeout(() => {
+    // Initialize date inputs with last 12 months (including current month)
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    const fromStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+    const toStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const fromInputEl = document.getElementById('fromDate');
+    const toInputEl = document.getElementById('toDate');
+    if (fromInputEl && toInputEl) {
+      fromInputEl.value = fromStr;
+      toInputEl.value = toStr;
+    }
+    // Setup update button
+    const btn = document.getElementById('updateCharts');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const fromVal = fromInputEl.value;
+        const toVal = toInputEl.value;
+        updateCharts(fromVal, toVal);
+      });
+    }
+    // Initial render
+    updateCharts(fromStr, toStr);
     renderMap();
-    renderUnitChart();
-    renderExpenseCategoryChart();
   }, 0);
 }
 
@@ -589,7 +646,7 @@ function renderMap() {
       sumLng += prop.lng;
       // Create marker with popup
       L.marker([prop.lat, prop.lng]).addTo(leafletMap)
-        .bindPopup(`<strong>${prop.name}</strong><br>${t('price')}: ${prop.price.toFixed(2)}`);
+        .bindPopup(`<strong>${prop.name}</strong>`);
     });
     const avgLat = sumLat / coords.length;
     const avgLng = sumLng / coords.length;
@@ -600,6 +657,11 @@ function renderMap() {
 // Global Chart instances to allow destroying/recreating
 let unitChartInstance;
 let expenseCategoryChartInstance;
+
+// Additional chart instances for dashboard
+let cashflowChartInstance;
+let expensesChartInstance;
+let occupancyChartInstance;
 
 /**
  * Compute performance metrics for each property. Returns an array of objects
@@ -663,9 +725,25 @@ function renderUnitChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const datasetLabel = context.dataset.label || '';
+              const val = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+              return `${datasetLabel}: ${val.toFixed(2)} TJS`;
+            }
+          }
+        }
+      },
       scales: {
         y: {
-          beginAtZero: true
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return `${value} TJS`;
+            }
+          }
         }
       }
     }
@@ -763,6 +841,224 @@ function computeExpenseSummary() {
   const entries = Object.entries(totals).map(([month, amount]) => ({ month, amount }));
   entries.sort((a, b) => (a.month > b.month ? 1 : -1));
   return entries;
+}
+
+// Compute monthly cash flow within a date range
+function computeCashFlowRange(fromDate, toDate) {
+  const totals = {};
+  rents.forEach(rent => {
+    rent.payments.forEach(pay => {
+      if (pay.paid) {
+        const d = new Date(pay.dueDate);
+        if (d >= fromDate && d <= toDate) {
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          totals[key] = (totals[key] || 0) + rent.price;
+        }
+      }
+    });
+  });
+  const entries = Object.entries(totals).map(([month, amount]) => ({ month, amount }));
+  entries.sort((a, b) => (a.month > b.month ? 1 : -1));
+  return entries;
+}
+
+// Compute monthly expense summary within a date range
+function computeExpenseSummaryRange(fromDate, toDate) {
+  const totals = {};
+  expenses.forEach(exp => {
+    const d = new Date(exp.date);
+    if (d >= fromDate && d <= toDate) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      totals[key] = (totals[key] || 0) + exp.amount;
+    }
+  });
+  const entries = Object.entries(totals).map(([month, amount]) => ({ month, amount }));
+  entries.sort((a, b) => (a.month > b.month ? 1 : -1));
+  return entries;
+}
+
+// Compute occupancy counts (empty and occupied)
+function computeOccupancy() {
+  const empty = properties.filter(p => p.status === 'available').length;
+  const occupied = properties.filter(p => p.status === 'rented').length;
+  return { empty, occupied };
+}
+
+// Render occupancy chart (doughnut)
+function renderOccupancyChart() {
+  const canvas = document.getElementById('occupancyChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const data = computeOccupancy();
+  const labels = [t('empty_units') || t('empty'), t('filled_units') || t('filled')];
+  const values = [data.empty, data.occupied];
+  if (occupancyChartInstance) {
+    occupancyChartInstance.destroy();
+  }
+  occupancyChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(255, 99, 132, 0.6)'
+          ],
+          borderColor: '#ffffff',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              return `${context.label}: ${context.parsed}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Render cashflow line chart for a date range
+function renderCashflowChart(fromDate, toDate) {
+  const canvas = document.getElementById('cashflowChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const data = computeCashFlowRange(fromDate, toDate);
+  const labels = data.map(item => item.month);
+  const values = data.map(item => item.amount);
+  if (cashflowChartInstance) {
+    cashflowChartInstance.destroy();
+  }
+  cashflowChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: t('cashflow'),
+          data: values,
+          fill: false,
+          tension: 0.1,
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const val = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+              return `${val.toFixed(2)} TJS`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: function(value) {
+              return `${value} TJS`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Render expenses line chart for a date range
+function renderExpensesChart(fromDate, toDate) {
+  const canvas = document.getElementById('expensesChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const data = computeExpenseSummaryRange(fromDate, toDate);
+  const labels = data.map(item => item.month);
+  const values = data.map(item => item.amount);
+  if (expensesChartInstance) {
+    expensesChartInstance.destroy();
+  }
+  expensesChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: t('expenses_line'),
+          data: values,
+          fill: false,
+          tension: 0.1,
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const val = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+              return `${val.toFixed(2)} TJS`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: function(value) {
+              return `${value} TJS`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Update all charts with selected date range
+function updateCharts(fromVal, toVal) {
+  if (!fromVal || !toVal) return;
+  const [fromYear, fromMonth] = fromVal.split('-').map(Number);
+  const [toYear, toMonth] = toVal.split('-').map(Number);
+  // fromDate at start of month
+  const fromDate = new Date(fromYear, fromMonth - 1, 1);
+  // toDate at end of month
+  const toDate = new Date(toYear, toMonth, 0);
+  // Render charts
+  renderUnitChart();
+  renderOccupancyChart();
+  renderCashflowChart(fromDate, toDate);
+  renderExpensesChart(fromDate, toDate);
+}
+
+// Set up the hamburger menu for responsive navigation
+function setupHamburger() {
+  const nav = document.querySelector('.nav');
+  const hamburger = document.getElementById('hamburger');
+  if (!nav || !hamburger) return;
+  hamburger.addEventListener('click', () => {
+    nav.classList.toggle('open');
+  });
+  // Collapse nav when a nav button is clicked (useful on mobile)
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      nav.classList.remove('open');
+    });
+  });
 }
 
 // Compute list of unpaid properties with due payments
@@ -1352,17 +1648,6 @@ function openPropertyForm(property) {
   nameInput.value = property ? property.name : '';
   nameLabel.appendChild(nameInput);
   form.appendChild(nameLabel);
-  // Price
-  const priceLabel = document.createElement('label');
-  priceLabel.innerHTML = `${t('price')}<br>`;
-  const priceInput = document.createElement('input');
-  priceInput.type = 'number';
-  priceInput.step = '0.01';
-  priceInput.name = 'price';
-  priceInput.required = true;
-  priceInput.value = property ? property.price : '';
-  priceLabel.appendChild(priceInput);
-  form.appendChild(priceLabel);
   // Latitude
   const latLabel = document.createElement('label');
   latLabel.innerHTML = `${t('latitude')}<br>`;
@@ -1402,19 +1687,18 @@ function openPropertyForm(property) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const nameVal = nameInput.value.trim();
-    const priceVal = parseFloat(priceInput.value);
     const latVal = latInput.value !== '' ? parseFloat(latInput.value) : undefined;
     const lngVal = lngInput.value !== '' ? parseFloat(lngInput.value) : undefined;
     if (isEdit) {
+      // update existing property fields (do not change price)
       property.name = nameVal;
-      property.price = priceVal;
       property.lat = latVal;
       property.lng = lngVal;
     } else {
       const newProp = {
         id: nextPropertyId++,
         name: nameVal,
-        price: priceVal,
+        price: 0,
         status: 'available',
         lat: latVal,
         lng: lngVal
@@ -1860,213 +2144,3 @@ function clearSearchResults() {
 
 // Initialize after DOM is ready
 window.addEventListener('DOMContentLoaded', init);
-
-// Unit Performance Chart
-let unitPerformanceChart;
-function renderUnitPerformanceChart(data) {
-    const ctx = document.getElementById('unitPerformanceChart').getContext('2d');
-    if (unitPerformanceChart) {
-        unitPerformanceChart.destroy();
-    }
-    unitPerformanceChart = new Chart(ctx, {
-        type: 'bar',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-}
-
-
-// Occupancy Chart
-let occupancyChart;
-function renderOccupancyChart(emptyCount, occupiedCount) {
-    const ctx = document.getElementById('occupancyChart').getContext('2d');
-    if (occupancyChart) {
-        occupancyChart.destroy();
-    }
-    occupancyChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Empty', 'Occupied'],
-            datasets: [{
-                data: [emptyCount, occupiedCount],
-                backgroundColor: ['#FF6384', '#36A2EB']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-}
-
-
-// Shared date range
-let startDate = new Date();
-startDate.setMonth(startDate.getMonth() - 12);
-let endDate = new Date();
-
-function renderCashflowChart(data) {
-    const ctx = document.getElementById('cashflowChart').getContext('2d');
-    if (window.cashflowChartInstance) {
-        window.cashflowChartInstance.destroy();
-    }
-    window.cashflowChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                tooltip: { enabled: true }
-            }
-        }
-    });
-}
-
-function renderExpensesChart(data) {
-    const ctx = document.getElementById('expensesChart').getContext('2d');
-    if (window.expensesChartInstance) {
-        window.expensesChartInstance.destroy();
-    }
-    window.expensesChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                tooltip: { enabled: true }
-            }
-        }
-    });
-}
-
-function formatCurrency(value) {
-    return value.toLocaleString('en-US', { style: 'currency', currency: 'TJS' });
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  const now = new Date();
-  const past = new Date();
-  past.setMonth(past.getMonth() - 12);
-  document.getElementById('dateFrom').value = past.toISOString().slice(0, 7);
-  document.getElementById('dateTo').value = now.toISOString().slice(0, 7);
-
-  renderAllCharts();
-
-  document.getElementById('updateCharts').addEventListener('click', renderAllCharts);
-});
-
-function renderAllCharts() {
-  const unitCtx = document.getElementById('unitPerformanceChart').getContext('2d');
-  const occCtx = document.getElementById('occupancyChart').getContext('2d');
-  const cashCtx = document.getElementById('cashflowChart').getContext('2d');
-  const expCtx = document.getElementById('expensesChart').getContext('2d');
-
-  if (window.unitChart) window.unitChart.destroy();
-  if (window.occChart) window.occChart.destroy();
-  if (window.cashChart) window.cashChart.destroy();
-  if (window.expChart) window.expChart.destroy();
-
-  window.unitChart = new Chart(unitCtx, {
-    type: 'bar',
-    data: {
-      labels: ['Unit A', 'Unit B', 'Unit C'],
-      datasets: [
-        { label: 'Paid (TJS)', data: [1200, 1500, 1800], backgroundColor: '#4caf50' },
-        { label: 'Unpaid (TJS)', data: [300, 0, 200], backgroundColor: '#f44336' }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  window.occChart = new Chart(occCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Empty', 'Occupied'],
-      datasets: [{ data: [2, 5], backgroundColor: ['#ff9800', '#2196f3'] }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  window.cashChart = new Chart(cashCtx, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-      datasets: [{ label: 'Cashflow (TJS)', data: [1000, 1200, 1100, 1300, 1250], fill: false, borderColor: '#3f51b5' }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  window.expChart = new Chart(expCtx, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-      datasets: [{ label: 'Expenses (TJS)', data: [300, 400, 350, 450, 400], fill: false, borderColor: '#e91e63' }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-function formatTJS(n){
-  if (isNaN(n)) return '—';
-  return `${Number(n).toFixed(2)} TJS`;
-}
-
-let unitChartInstance, occupancyChartInstance, cashflowChartInstance, expensesChartInstance;
-
-function renderCharts() {
-  const unitCtx = document.getElementById('unitChart')?.getContext('2d');
-  const occCtx = document.getElementById('occupancyChart')?.getContext('2d');
-  const cashCtx = document.getElementById('cashflowChart')?.getContext('2d');
-  const expCtx = document.getElementById('expensesChart')?.getContext('2d');
-
-  if (unitChartInstance) unitChartInstance.destroy();
-  if (occupancyChartInstance) occupancyChartInstance.destroy();
-  if (cashflowChartInstance) cashflowChartInstance.destroy();
-  if (expensesChartInstance) expensesChartInstance.destroy();
-
-  unitChartInstance = new Chart(unitCtx, {
-    type: 'bar',
-    data: {
-      labels: ['Unit A', 'Unit B', 'Unit C'],
-      datasets: [
-        { label: 'Paid (TJS)', data: [1200, 1500, 1800], backgroundColor: '#4caf50' },
-        { label: 'Unpaid (TJS)', data: [300, 0, 200], backgroundColor: '#f44336' }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  occupancyChartInstance = new Chart(occCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Empty', 'Occupied'],
-      datasets: [{ data: [2, 5], backgroundColor: ['#ff9800', '#2196f3'] }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  cashflowChartInstance = new Chart(cashCtx, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-      datasets: [{ label: 'Cashflow (TJS)', data: [1000, 1200, 1100, 1300, 1250], fill: false, borderColor: '#3f51b5' }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  expensesChartInstance = new Chart(expCtx, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-      datasets: [{ label: 'Expenses (TJS)', data: [300, 400, 350, 450, 400], fill: false, borderColor: '#e91e63' }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
